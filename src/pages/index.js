@@ -1,12 +1,90 @@
-import Head from 'next/head';
+import Head from "next/head";
+import { Cloudinary } from "@cloudinary/url-gen";
+import { useState, useEffect, useRef } from "react";
+import Layout from "@components/Layout";
+import Container from "@components/Container";
+import Button from "@components/Button";
+import Webcam from "react-webcam";
+import styles from "@styles/Home.module.scss";
 
-import Layout from '@components/Layout';
-import Container from '@components/Container';
-import Button from '@components/Button';
+const videoConstraints = {
+  width: 720,
+  height: 720,
+  aspectRatio: 1,
+};
 
-import styles from '@styles/Home.module.scss';
+const cloudinary = new Cloudinary({
+  cloud: {
+    cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+  },
+  url: {
+    secure: true, // force https, set to false to force http
+  },
+});
 
 export default function Home() {
+  const webCamRef = useRef();
+  const [imageSrc, setImageSrc] = useState();
+  const [cldData, setCldData] = useState();
+  const [filter, setFilter] = useState();
+
+  const cloudImage = cldData?.public_id && cloudinary.image(cldData?.public_id);
+
+  if (cloudImage) {
+    cloudImage.effect(`e_art:${filter}`);
+  }
+
+  const src = cloudImage?.toURL() || imageSrc;
+
+  useEffect(() => {
+    if (!imageSrc) return;
+    (async function upload() {
+      const response = await fetch("/api/cloudinary/upload", {
+        method: "POST",
+        body: JSON.stringify({ image: imageSrc }),
+      }).then((res) => res.json());
+      setCldData(response);
+      console.log(response);
+    })();
+  }, [imageSrc]);
+
+  function handleOnCaputre() {
+    const image = webCamRef.current.getScreenshot();
+    setImageSrc(image);
+  }
+
+  // reset imageSrc when the component is unmounted
+  function handleOnReset() {
+    setImageSrc(null);
+    // refresh current page
+    setCldData(null);
+  }
+
+  // All filters
+  const ART_FILTERS = [
+    "al_dente",
+    "athena",
+    "audrey",
+    "aurora",
+    "daguerre",
+    "eucalyptus",
+    "fes",
+    "frost",
+    "hairspray",
+    "hokusai",
+    "incognito",
+    "linen",
+    "peacock",
+    "primavera",
+    "quartz",
+    "red_rock",
+    "refresh",
+    "sizzle",
+    "sonnet",
+    "ukulele",
+    "zorro",
+  ];
+
   return (
     <Layout>
       <Head>
@@ -16,23 +94,30 @@ export default function Home() {
       </Head>
 
       <Container>
+        <h2>How to Use : </h2>
+        <p>
+          <ol>
+            <li>Click Caputre first</li>
+            <li>Then apply desired filters and see the changes</li>
+          </ol>
+        </p>
         <div className={styles.camera}>
-
           <div className={styles.stageContainer}>
             <div className={styles.stage}>
-              <img src="/images/mountain-1200x1200.jpg" />
+              {src && <img src={src} alt="caputre image" />}
+              {!src && (
+                <Webcam ref={webCamRef} videoConstraints={videoConstraints} />
+              )}
             </div>
           </div>
 
           <div className={styles.controls}>
             <ul>
               <li>
-                <Button>
-                  Capture photo
-                </Button>
+                <Button onClick={handleOnCaputre}>Capture photo</Button>
               </li>
               <li>
-                <Button color="red">
+                <Button color="red" onClick={handleOnReset}>
                   Reset
                 </Button>
               </li>
@@ -41,17 +126,31 @@ export default function Home() {
         </div>
 
         <div className={styles.effects}>
-          <h2>Filters</h2>
+          <h2>Select filters to Apply </h2>
           <ul className={styles.filters}>
-            <li data-is-active-filter={false}>
-              <button className={styles.filterThumb}>
-                <img width="100" height="100" src="/images/mountain-100x100.jpg" alt="Filter Name" />
-                <span>Filter Name</span>
-              </button>
-            </li>
+            {ART_FILTERS.map((filter) => (
+              <li key={filter} data-is-active-filter={false}>
+                <button
+                  className={styles.filterThumb}
+                  onClick={() => setFilter(filter)}
+                >
+                  <img
+                    width="100"
+                    height="100"
+                    src={cloudinary
+                      .image("placeholder")
+                      .resize("w_200,h_300")
+                      .effect(`e_art:${filter}`)
+                      .toURL()}
+                    alt={filter}
+                  />
+                  <span>{filter}</span>
+                </button>
+              </li>
+            ))}
           </ul>
         </div>
       </Container>
     </Layout>
-  )
+  );
 }

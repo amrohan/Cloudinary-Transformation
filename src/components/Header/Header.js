@@ -1,8 +1,8 @@
-import Link from 'next/link';
+import Link from "next/link";
 
-import Container from '@components/Container';
+import Container from "@components/Container";
 
-import styles from './Header.module.scss';
+import styles from "./Header.module.scss";
 
 const Header = () => {
   return (
@@ -10,12 +10,12 @@ const Header = () => {
       <Container className={styles.headerContainer}>
         <p className={styles.headerTitle}>
           <Link href="/">
-            <a>My Camera Filters</a>
+            <a>Snap Filters 🤞</a>
           </Link>
         </p>
       </Container>
     </header>
-  )
-}
+  );
+};
 
 export default Header;

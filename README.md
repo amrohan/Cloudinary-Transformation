@@ -1,9 +1,5 @@
-# Demo Camera Filters Starter
+# Demo Camera Filters
 
-## ⚡️ Quick Start
+A set of easy filters to use on a webcam image.
 
-```bash
-yarn create next-app -e https://github.com/colbyfayock/demo-camera-filters-starter
-# or
-npx create-next-app -e https://github.com/colbyfayock/demo-camera-filters-starter
-```
+[Live Demo](https://cloudinary-filters.vercel.com)
